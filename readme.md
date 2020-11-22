@@ -66,7 +66,7 @@ autosample ls
 この例では、`MIDI OUT [1] Steinberg UR22mkII  Port1`がMIDIイベントを受信して、その時`AUDIO [4] Yamaha: Steinberg UR22mkII`から発せられる音を録音しながら`AUDIO [1] Apple Inc.: Built-in Output`で録音時の音をモニタします。  
 実際にはユーザごとに異なる環境を設定する必要があります。
 ````
-autosample rec --midi --audioIn 4 --audioOut 1 --low 60 --high 70
+autosample rec --midi 1 --audioIn 4 --audioOut 1 --low 60 --high 70
 ````
 
 ## 録音設定
