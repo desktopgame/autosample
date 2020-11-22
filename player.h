@@ -13,9 +13,8 @@ int output(void* outputBuffer, void* /*inputBuffer*/,
 class player {
  public:
   explicit player(RtAudio& audio, int deviceId);
-  void start(const std::string& fn);
-  bool is_active() const;
-  bool is_running() const;
+  ~player();
+  void startSync(const std::string& fn);
 
  private:
   void destroy();

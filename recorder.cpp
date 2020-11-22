@@ -1,5 +1,8 @@
 #include "recorder.h"
 
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <sstream>
 #include <thread>
 
@@ -17,7 +20,7 @@ int input(void* /*outputBuffer*/, void* inputBuffer, unsigned int nBufferFrames,
   }
 
   unsigned long offset = iData->frameCounter * iData->channels;
-  memcpy(iData->buffer + offset, inputBuffer, iData->bufferBytes);
+  ::memcpy(iData->buffer + offset, inputBuffer, iData->bufferBytes);
   iData->frameCounter += frames;
 
   if (iData->frameCounter >= iData->totalFrames) return 2;
@@ -40,8 +43,8 @@ recorder::recorder(RtAudio& audio, int deviceId)
   this->sampleRate = deviceInfo.preferredSampleRate;
   this->bufferFrames = 512;
 }
-recorder::~recorder() { audio.closeStream(); }
-void recorder::start() {
+recorder::~recorder() { destroy(); }
+void recorder::startAsync() {
   // RtAudio::DeviceInfo info = audio.getDeviceInfo(deviceId);
   iParams.deviceId = deviceId;
   iParams.nChannels = channels;
@@ -75,8 +78,11 @@ void recorder::write(const std::string& fn) {
   ::fwrite(data.buffer, sizeof(MY_TYPE), data.totalFrames * channels, fd);
   ::fclose(fd);
 }
-bool recorder::is_active() const { return active; }
-bool recorder::is_running() const { return audio.isStreamRunning(); }
+void recorder::waitSync() const {
+  while (audio.isStreamRunning()) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  }
+}
 std::string recorder::make_sox_command(const std::string& raw,
                                        const std::string& wav) const {
   std::stringstream ss;

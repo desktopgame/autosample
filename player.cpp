@@ -1,5 +1,7 @@
 #include "player.h"
 
+#include <cstdio>
+#include <cstring>
 #include <thread>
 
 #include "audio_common.h"
@@ -12,13 +14,13 @@ int output(void *outputBuffer, void * /*inputBuffer*/,
   // In general, it's not a good idea to do file input in the audio
   // callback function but I'm doing it here because I don't know the
   // length of the file we are reading.
-  unsigned int count = fread(outputBuffer, oData->channels * sizeof(MY_TYPE),
-                             nBufferFrames, oData->fd);
+  unsigned int count = ::fread(outputBuffer, oData->channels * sizeof(MY_TYPE),
+                               nBufferFrames, oData->fd);
   if (count < nBufferFrames) {
     unsigned int bytes =
         (nBufferFrames - count) * oData->channels * sizeof(MY_TYPE);
     unsigned int startByte = count * oData->channels * sizeof(MY_TYPE);
-    memset((char *)(outputBuffer) + startByte, 0, bytes);
+    ::memset((char *)(outputBuffer) + startByte, 0, bytes);
     return 1;
   }
 
@@ -38,7 +40,8 @@ player::player(RtAudio &audio, int deviceId)
   this->sampleRate = deviceInfo.preferredSampleRate;
   this->bufferFrames = 512;
 }
-void player::start(const std::string &fn) {
+player::~player() { destroy(); }
+void player::startSync(const std::string &fn) {
   oParams.deviceId = deviceId;
   oParams.nChannels = channels;
   oParams.firstChannel = 0;
@@ -60,14 +63,12 @@ void player::start(const std::string &fn) {
     destroy();
     return;
   }
-  while (is_running()) {
+  while (audio.isStreamRunning()) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
   ::fclose(data.fd);
   destroy();
 }
-bool player::is_active() const { return active; }
-bool player::is_running() const { return audio.isStreamRunning(); }
 // private
 void player::destroy() {
   if (audio.isStreamOpen()) audio.closeStream();

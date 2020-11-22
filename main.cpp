@@ -168,12 +168,9 @@ int main(int argc, char* argv[]) {
       std::string key =
           std::to_string(i) + "_" + keyboards.at(i % 12) + std::to_string(oct);
       try {
-        rec.start();
+        rec.startAsync();
       } catch (RtAudioError& e) {
         std::cout << '\n' << e.getMessage() << '\n' << std::endl;
-        break;
-      }
-      if (!rec.is_active()) {
         break;
       }
       // NOTE ON
@@ -188,15 +185,13 @@ int main(int argc, char* argv[]) {
       messages[2] = 0;
       midi_out->sendMessage(&messages);
       // wait for recorder running
-      while (rec.is_running()) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
-      }
+      rec.waitSync();
       std::filesystem::path raw = std::filesystem::path(key + ".raw");
       std::filesystem::path wav = std::filesystem::path(key + ".wav");
       std::filesystem::path out = baseDir / raw;
       std::filesystem::path conv = baseDir / wav;
       rec.write(out.string());
-      pl.start(out.string());
+      pl.startSync(out.string());
       bashScript.push_back(rec.make_sox_command(key + ".raw", key + ".wav"));
       std::this_thread::sleep_for(std::chrono::milliseconds(optMilliseconds));
       // all sound off

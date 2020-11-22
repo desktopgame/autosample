@@ -20,10 +20,9 @@ class recorder {
  public:
   explicit recorder(RtAudio& audio, int deviceId);
   ~recorder();
-  void start();
+  void startAsync();
   void write(const std::string& fn);
-  bool is_active() const;
-  bool is_running() const;
+  void waitSync() const;
   std::string make_sox_command(const std::string& raw,
                                const std::string& wav) const;
 
