@@ -10,6 +10,6 @@ add_executable(autosample)
 
 install(TARGETS autosample RUNTIME DESTINATION bin CONFIGURATIONS Release)
 install(TARGETS autosample RUNTIME DESTINATION bin CONFIGURATIONS Debug)
-target_sources(autosample PRIVATE main.cpp recorder.cpp player.cpp)
+target_sources(autosample PRIVATE main.cpp recorder.cpp player.cpp audio_common.cpp)
 target_include_directories(autosample PRIVATE ${RTMIDI_INCLUDE_DIRS} ${RTAUDIO_INCLUDE_DIRS})
 target_link_libraries(autosample PRIVATE ${RTMIDI_LIBRARIES} ${RTAUDIO_LIBRARIES})

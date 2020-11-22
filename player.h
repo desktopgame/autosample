@@ -25,7 +25,7 @@ class player {
   int deviceId;
   bool active;
 
-  unsigned long format;
+  RtAudioFormat format;
   unsigned int channels;
   unsigned int sampleRate;
   unsigned int bufferFrames;

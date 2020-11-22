@@ -3,6 +3,8 @@
 #include <sstream>
 #include <thread>
 
+#include "audio_common.h"
+
 int input(void* /*outputBuffer*/, void* inputBuffer, unsigned int nBufferFrames,
           double /*streamTime*/, RtAudioStreamStatus /*status*/, void* data) {
   InputData* iData = (InputData*)data;
@@ -31,21 +33,9 @@ recorder::recorder(RtAudio& audio, int deviceId)
       milliseconds(1000),
       active(true) {
   audio.showWarnings(true);
-  if (deviceInfo.nativeFormats | RTAUDIO_SINT32) {
-    this->format = RTAUDIO_SINT32;
-  } else if (deviceInfo.nativeFormats | RTAUDIO_SINT24) {
-    this->format = RTAUDIO_SINT24;
-  } else if (deviceInfo.nativeFormats | RTAUDIO_SINT16) {
-    this->format = RTAUDIO_SINT16;
-  } else if (deviceInfo.nativeFormats | RTAUDIO_SINT8) {
-    this->format = RTAUDIO_SINT8;
-  } else if (deviceInfo.nativeFormats | RTAUDIO_FLOAT32) {
-    this->format = RTAUDIO_FLOAT32;
-  } else if (deviceInfo.nativeFormats | RTAUDIO_FLOAT64) {
-    this->format = RTAUDIO_FLOAT64;
-  } else {
-    this->active = false;
-  }
+  int formatN;
+  std::string name;
+  select_format(deviceInfo.nativeFormats, format, formatN, name);
   this->channels = deviceInfo.inputChannels;
   this->sampleRate = deviceInfo.preferredSampleRate;
   this->bufferFrames = 512;
@@ -90,26 +80,13 @@ bool recorder::is_running() const { return audio.isStreamRunning(); }
 std::string recorder::make_sox_command(const std::string& raw,
                                        const std::string& wav) const {
   std::stringstream ss;
+  RtAudioFormat format;
   int formatN = 0;
-  std::string formatName = "signed-integer";
+  std::string name = "signed-integer";
 
-  if (deviceInfo.nativeFormats | RTAUDIO_SINT32) {
-    formatN = 32;
-  } else if (deviceInfo.nativeFormats | RTAUDIO_SINT24) {
-    formatN = 24;
-  } else if (deviceInfo.nativeFormats | RTAUDIO_SINT16) {
-    formatN = 16;
-  } else if (deviceInfo.nativeFormats | RTAUDIO_SINT8) {
-    formatN = 8;
-  } else if (deviceInfo.nativeFormats | RTAUDIO_FLOAT32) {
-    formatN = 32;
-    formatName = "floating-point";
-  } else if (deviceInfo.nativeFormats | RTAUDIO_FLOAT64) {
-    formatN = 64;
-    formatName = "floating-point";
-  }
+  select_format(deviceInfo.nativeFormats, format, formatN, name);
   ss << "sox -t raw -c " << channels << " -r " << sampleRate << " -b "
-     << formatN << " -e " << formatName << " " << raw << " -t wav " << wav
+     << formatN << " -e " << name << " " << raw << " -t wav " << wav
      << std::endl;
   return ss.str();
 }

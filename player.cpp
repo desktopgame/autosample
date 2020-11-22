@@ -1,6 +1,8 @@
 #include "player.h"
 
 #include <thread>
+
+#include "audio_common.h"
 // Interleaved buffers
 int output(void *outputBuffer, void * /*inputBuffer*/,
            unsigned int nBufferFrames, double /*streamTime*/,
@@ -29,21 +31,9 @@ player::player(RtAudio &audio, int deviceId)
       deviceId(deviceId),
       active(true) {
   audio.showWarnings(true);
-  if (deviceInfo.nativeFormats | RTAUDIO_SINT32) {
-    this->format = RTAUDIO_SINT32;
-  } else if (deviceInfo.nativeFormats | RTAUDIO_SINT24) {
-    this->format = RTAUDIO_SINT24;
-  } else if (deviceInfo.nativeFormats | RTAUDIO_SINT16) {
-    this->format = RTAUDIO_SINT16;
-  } else if (deviceInfo.nativeFormats | RTAUDIO_SINT8) {
-    this->format = RTAUDIO_SINT8;
-  } else if (deviceInfo.nativeFormats | RTAUDIO_FLOAT32) {
-    this->format = RTAUDIO_FLOAT32;
-  } else if (deviceInfo.nativeFormats | RTAUDIO_FLOAT64) {
-    this->format = RTAUDIO_FLOAT64;
-  } else {
-    this->active = false;
-  }
+  int formatN;
+  std::string name;
+  select_format(deviceInfo.nativeFormats, format, formatN, name);
   this->channels = deviceInfo.outputChannels;
   this->sampleRate = deviceInfo.preferredSampleRate;
   this->bufferFrames = 512;
